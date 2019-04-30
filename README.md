@@ -1,7 +1,9 @@
 # news_embedding
 获取一篇资讯的embedding表达
 
+
 主要思路:
+
 1.通过TF-IDF算法获取一篇资讯的关键字排名，获取此排名前若干个关键词(3个？5个？)，同时获取对应关键词的TF-IDF值
 
 2.通过word2vec获取每个词的词向量，每个词的TF-IDF值作为系数，累加所有关键词的词向量，得到本篇资讯的news embedding
