@@ -18,3 +18,11 @@ news_embedding = TF-IDF(word_1)*W2V(word_1) + TF-IDF(word_2)*W2V(word_2) + ... +
 注意事项：
 
 1.工程中的all_news.dat，已经是按照主要思路中的第1步预处理的结果数据了，pickle格式存储
+
+2.使用word2vec预处理的文件，得到的词向量是256维
+
+ls word2vec/ -1
+word2vec_wx
+word2vec_wx.syn1neg.npy
+word2vec_wx.syn1.npy
+word2vec_wx.wv.syn0.npy
