@@ -23,8 +23,7 @@ news_embedding = TF-IDF(word_1)*W2V(word_1) + TF-IDF(word_2)*W2V(word_2) + ... +
 
 ls word2vec/ -1
 
-word2vec_wx
-
+word2vec_wx\n
 word2vec_wx.syn1neg.npy
 
 word2vec_wx.syn1.npy
