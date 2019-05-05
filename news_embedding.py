@@ -7,6 +7,10 @@ from gensim.models import Word2Vec
 import pickle
 
 
+#########################################################################
+## sigmoid函数 ##
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
 
 #########################################################################
 ## 求X Y两个向量的cosine值
@@ -116,7 +120,7 @@ class NewsEmbedding():
             if 0 == len(w2v_vector):
                 continue
 
-            coe = word_tfidf
+            coe = sigmoid(word_tfidf)
 
             news_embedding = news_embedding + coe * w2v_vector
 
