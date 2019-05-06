@@ -87,8 +87,8 @@ class NewsEmbedding():
         # word2vec模型
         self.model = Word2Vec.load("word2vec/word2vec_wx")
 
-        # 所有句子的向量集合 Vs
-        self.all_news_dict = {}
+        # 所有资讯的集合
+        self.all_news_list = []
 
 
 
@@ -140,7 +140,7 @@ class NewsEmbedding():
 
             news_info_dict["news_embedding"] = news_embedding
 
-            self.all_news_dict[news_id] = news_info_dict
+            self.all_news_list.append(news_info_dict)
 
 
 
@@ -161,7 +161,9 @@ if __name__ == '__main__':
     clustering_list = []
 
     # 遍历所有的资讯
-    for news_id, news_info in news_embedding_class.all_news_dict.items():
+    for i in range(len(news_embedding_class.all_news_list)):
+
+        news_info = news_embedding_class.all_news_list[i]
 
         # 遍历所有的簇  看有无合适的簇可以加入此篇资讯
         is_append_clustering = False
