@@ -5,6 +5,7 @@ import numpy as np
 import jieba_fast
 from gensim.models import Word2Vec
 import pickle
+import time
 
 
 #########################################################################
@@ -14,20 +15,20 @@ def sigmoid(x):
 
 #########################################################################
 ## 求X Y两个向量的cosine值
-def get_cosine_value(X, Y):
+def get_cosine_value(X_list, Y_list, X_norm, Y_norm):
     # 分子 x1*y1 + x2*y2 + ... + xn*yn
-    # 分母 ||X|| * ||Y||
+    # 分母 X_norm * Y_norm
 
-    #print(X)
-    #print(Y)
+    #print(X_list)
+    #print(Y_list)
 
-    if (np.linalg.norm(X) <= 0.0 or np.linalg.norm(Y) <= 0.0):
+    if (X_norm <= 0.0 or Y_norm <= 0.0 or len(X_list) != len(Y_list)):
         return 0
 
-    X = X.reshape(1, 256)
-    Y = Y.reshape(1, 256)
+    X = X_list.reshape(1, 256)
+    Y = Y_list.reshape(1, 256)
 
-    return float(X.dot(Y.T) / (np.linalg.norm(X) * np.linalg.norm(Y)))
+    return float(X.dot(Y.T) / (X_norm * Y_norm))
 
 
 ##################################一个聚类簇的信息#######################################
@@ -42,6 +43,9 @@ class Clustering():
 
         # 判断距离阈值 想要加入此聚类 需要和质心的距离大于distance_threshold才行
         self.distance_threshold = 0.9
+
+        # 簇心的norm值 方便做夹角余弦计算
+        self.clustering_norm = 0.0
 
 
     # 返回此簇的资讯数量
@@ -60,6 +64,9 @@ class Clustering():
         for i in range(len(self.news_info_list)):
             self.clustering_centroid += self.news_info_list[i]["news_embedding"]
 
+        # 重新计算质心的norm值
+        self.clustering_norm = np.linalg.norm(self.clustering_centroid)
+
         # 保存资讯信息
         self.news_info_list.append(news_info)
 
@@ -69,7 +76,7 @@ class Clustering():
 
         # 簇为空 或者 簇心和新资讯的距离足够近  都可以加入到簇中
         if 0 == self.get_cluserting_news_size() or \
-                get_cosine_value(self.clustering_centroid, news_info["news_embedding"]) >= self.distance_threshold:
+                get_cosine_value(self.clustering_centroid, news_info["news_embedding"], self.clustering_norm, news_info["news_norm"]) >= self.distance_threshold:
             self.reset_clustering_centroid(news_info)
             return 0
 
@@ -140,6 +147,9 @@ class NewsEmbedding():
 
             news_info_dict["news_embedding"] = news_embedding
 
+            # 计算资讯向量的norm值(开方(x1方 + x2方 + ... + xn方))，用于后面的夹角余弦的计算
+            news_info_dict["news_norm"] = np.linalg.norm(news_embedding)
+
             self.all_news_list.append(news_info_dict)
 
 
@@ -160,6 +170,7 @@ if __name__ == '__main__':
     # 聚类簇的集合
     clustering_list = []
 
+    t1 = time.time()
     # 遍历所有的资讯
     for i in range(len(news_embedding_class.all_news_list)):
 
@@ -180,6 +191,11 @@ if __name__ == '__main__':
             new_clustering.calc_news_cluserting(news_info)
 
             clustering_list.append(new_clustering)
+
+        if 0 == i%100:
+            t2 = time.time()
+            print("for news_embedding_class.all_news_dict %d cost : %f" % (i, t2-t1))
+            t1 = time.time()
 
 
 
