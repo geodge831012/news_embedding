@@ -172,9 +172,9 @@ if __name__ == '__main__':
 
     t1 = time.time()
     # 遍历所有的资讯
-    for i in range(len(news_embedding_class.all_news_list)):
+    for j in range(len(news_embedding_class.all_news_list)):
 
-        news_info = news_embedding_class.all_news_list[i]
+        news_info = news_embedding_class.all_news_list[j]
 
         # 遍历所有的簇  看有无合适的簇可以加入此篇资讯
         is_append_clustering = False
@@ -192,9 +192,9 @@ if __name__ == '__main__':
 
             clustering_list.append(new_clustering)
 
-        if 0 == i%100:
+        if 0 == j%100:
             t2 = time.time()
-            print("for news_embedding_class.all_news_dict %d cost : %f" % (i, t2-t1))
+            print("for news_embedding_class.all_news_dict %d cost : %f" % (j, t2-t1))
             t1 = time.time()
 
 
