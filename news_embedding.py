@@ -6,6 +6,7 @@ import jieba_fast
 from gensim.models import Word2Vec
 import pickle
 import time
+import func_utils
 
 
 #########################################################################
@@ -76,7 +77,7 @@ class Clustering():
 
         # 簇为空 或者 簇心和新资讯的距离足够近  都可以加入到簇中
         if 0 == self.get_cluserting_news_size() or \
-                get_cosine_value(self.clustering_centroid, news_info["news_embedding"], self.clustering_norm, news_info["news_norm"]) >= self.distance_threshold:
+                func_utils.get_cosine_value(self.clustering_centroid, news_info["news_embedding"], self.clustering_norm, news_info["news_norm"]) >= self.distance_threshold:
             self.reset_clustering_centroid(news_info)
             return 0
 

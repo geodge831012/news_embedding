@@ -30,3 +30,7 @@ word2vec_wx.syn1neg.npy
 word2vec_wx.syn1.npy
 
 word2vec_wx.wv.syn0.npy
+
+3.编译func_utils.pyc,使用的命令是
+
+python func_utils_setup.py build_ext --inplace
