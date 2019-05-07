@@ -171,6 +171,7 @@ if __name__ == '__main__':
     clustering_list = []
 
     t1 = time.time()
+    print("news_embedding_class.all_news_list.len=%d" % len(news_embedding_class.all_news_list))
     # 遍历所有的资讯
     for j in range(len(news_embedding_class.all_news_list)):
 
