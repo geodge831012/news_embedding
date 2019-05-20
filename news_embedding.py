@@ -1,35 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import os
 import numpy as np
-import jieba_fast
 from gensim.models import Word2Vec
+from tqdm import tqdm
 import pickle
-import time
 import func_utils
 
-
-#########################################################################
-## sigmoid函数 ##
-def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
-
-#########################################################################
-## 求X Y两个向量的cosine值
-def get_cosine_value(X_list, Y_list, X_norm, Y_norm):
-    # 分子 x1*y1 + x2*y2 + ... + xn*yn
-    # 分母 X_norm * Y_norm
-
-    #print(X_list)
-    #print(Y_list)
-
-    if (X_norm <= 0.0 or Y_norm <= 0.0 or len(X_list) != len(Y_list)):
-        return 0
-
-    X = X_list.reshape(1, 256)
-    Y = Y_list.reshape(1, 256)
-
-    return float(X.dot(Y.T) / (X_norm * Y_norm))
 
 
 ##################################一个聚类簇的信息#######################################
@@ -41,9 +17,6 @@ class Clustering():
 
         # 聚类簇的所有成员(以资讯全属性dict的形式存储,包括id、title、news_embedding等)
         self.news_info_list = []
-
-        # 判断距离阈值 想要加入此聚类 需要和质心的距离大于distance_threshold才行
-        self.distance_threshold = 0.9
 
         # 簇心的norm值 方便做夹角余弦计算
         self.clustering_norm = 0.0
@@ -72,17 +45,54 @@ class Clustering():
         self.news_info_list.append(news_info)
 
 
-    # 判断一个资讯能不能加入一个簇
-    def calc_news_cluserting(self, news_info):
+class ClusteringMgr():
+    def __init__(self):
 
-        # 簇为空 或者 簇心和新资讯的距离足够近  都可以加入到簇中
-        if 0 == self.get_cluserting_news_size() or \
-                func_utils.get_cosine_value(self.clustering_centroid, news_info["news_embedding"], self.clustering_norm, news_info["news_norm"]) >= self.distance_threshold:
-            self.reset_clustering_centroid(news_info)
-            return 0
+        # 用于存储所有簇的质心
+        self.g_clustering_centroid_matrix = np.empty([0, 256], dtype=np.float)
 
-        # 不成功 返回1
-        return 1
+        # 判断距离阈值 想要加入此聚类 需要和质心的距离大于distance_threshold才行
+        self.distance_threshold = 0.9
+
+        # 聚类簇的集合
+        self.clustering_list = []
+
+    # 聚类所有的资讯
+    def clustering_all_news(self, all_news_list):
+
+        for news_info in tqdm(all_news_list):
+
+            # 是否合并一个簇
+            is_merge_clustering = False
+
+            if (len(self.g_clustering_centroid_matrix) > 0):
+                # x1*y1 + x2*y2 + ... + xn*yn / sqrt(x1*x1 + x2*x2 + xn*xn) * sqrt(y1*y1 + y2*y2 + yn*yn)
+                result_list = list(func_utils.matrix_dot(self.g_clustering_centroid_matrix, news_info["news_embedding"]))
+
+                for i in range(len(result_list)):
+                    fenmu_float = self.clustering_list[i].clustering_norm * news_info["news_norm"]
+                    if (fenmu_float > 0):
+                        result_list[i] /= fenmu_float
+
+                # 有超过阈值的结果
+                if (max(result_list) > self.distance_threshold):
+                    pos = result_list.index(max(result_list))
+
+                    # 合并簇
+                    self.clustering_list[pos].reset_clustering_centroid(news_info)
+                    self.g_clustering_centroid_matrix[pos] = self.clustering_list[pos].clustering_centroid
+
+                    is_merge_clustering = True
+
+
+            if False == is_merge_clustering:
+                # 如果不合并簇，那么就新增一个簇
+                new_clustering = Clustering()
+                new_clustering.reset_clustering_centroid(news_info)
+
+                self.g_clustering_centroid_matrix = np.vstack((self.g_clustering_centroid_matrix, news_info["news_embedding"]))
+                self.clustering_list.append(new_clustering)
+
 
 
 
@@ -128,7 +138,7 @@ class NewsEmbedding():
             if 0 == len(w2v_vector):
                 continue
 
-            coe = sigmoid(word_tfidf)
+            coe = func_utils.sigmoid(word_tfidf)
 
             news_embedding = news_embedding + coe * w2v_vector
 
@@ -168,46 +178,19 @@ if __name__ == '__main__':
     news_embedding_class.proc_news_data()
 
 
-    # 聚类簇的集合
-    clustering_list = []
-
-    t1 = time.time()
     print("news_embedding_class.all_news_list.len=%d" % len(news_embedding_class.all_news_list))
-    # 遍历所有的资讯
-    for j in range(len(news_embedding_class.all_news_list)):
-
-        news_info = news_embedding_class.all_news_list[j]
-
-        # 遍历所有的簇  看有无合适的簇可以加入此篇资讯
-        is_append_clustering = False
-
-        for i in range(len(clustering_list)):
-            if 0 == clustering_list[i].calc_news_cluserting(news_info):
-                # 成功加入簇
-                is_append_clustering = True
-                break
-
-        if False == is_append_clustering:
-            # 没有加入到任何一个簇 则新起一个簇
-            new_clustering = Clustering()
-            new_clustering.calc_news_cluserting(news_info)
-
-            clustering_list.append(new_clustering)
-
-        if 0 == j%100:
-            t2 = time.time()
-            print("for news_embedding_class.all_news_dict %d cost : %f" % (j, t2-t1))
-            t1 = time.time()
-
+    # 遍历所有的资讯 做聚类
+    clustering_mgr = ClusteringMgr()
+    clustering_mgr.clustering_all_news(news_embedding_class.all_news_list)
 
 
     print("=================print_result=======================")
-    print("clustering_list.len=%d" % len(clustering_list))
+    print("clustering_mgr.clustering_list.len=%d" % len(clustering_mgr.clustering_list))
     print("=================print_result=======================")
 
-    for i in range(len(clustering_list)):
-        if len(clustering_list[i].news_info_list) > 3:
-            news_info_list = clustering_list[i].news_info_list
+    for i in range(len(clustering_mgr.clustering_list)):
+        if len(clustering_mgr.clustering_list[i].news_info_list) > 3:
+            news_info_list = clustering_mgr.clustering_list[i].news_info_list
 
             for j in range(len(news_info_list)):
                 print(news_info_list[j]["title"])
