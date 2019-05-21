@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
 from gensim.models import Word2Vec
 from tqdm import tqdm
+from acora import AcoraBuilder
+
+import os
+import numpy as np
 import pickle
 import func_utils
 
@@ -57,6 +60,15 @@ class ClusteringMgr():
         # 聚类簇的集合
         self.clustering_list = []
 
+        # 股票名称过滤的阈值
+        self.filter_threshold = 0.8
+
+        # 所有股票列表
+        self.stock_list = []
+        for line in open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/stocklist.txt")):
+            self.stock_list.append(line.strip())
+
+
     # 聚类所有的资讯
     def clustering_all_news(self, all_news_list):
 
@@ -94,6 +106,48 @@ class ClusteringMgr():
                 self.clustering_list.append(new_clustering)
 
 
+    # 主题进行过滤 主要是过滤一季度报等信息
+    # 如果同一个簇的主题列表包含过多的股票名称 则过滤之
+    def filter_clustering(self):
+
+        # select SecuAbbr from secumain where SecuMarket in (83,90) and SecuCategory=1 and ListedSector in (1,2,6) and ListedState=1
+
+        # build AC model
+        builder = AcoraBuilder()
+
+        for i in range(len(self.stock_list)):
+            builder.add(self.stock_list[i])
+
+        tree = builder.build()
+
+        #返回的聚类list
+        rst_clustering_list = []
+
+        # 处理聚类
+        for i in range(len(self.clustering_list)):
+            # 一个聚类
+            clustering = self.clustering_list[i]
+
+            # 此聚类主题下的资讯篇数
+            news_num = len(clustering.news_info_list)
+
+            content_str = ""
+            for j in range(len(clustering.news_info_list)):
+                news_info = clustering.news_info_list[j]
+                content_str += news_info["title"]
+
+            # 匹配到的关键词 要进行唯一化处理
+            # 比如10篇文章都有华谊兄弟亏损的 就不应该过滤
+            # 如果是多个公司一季度报的 就需要过滤
+            unique_word_set = set()
+
+            for hit_word, pos in tree.finditer(content_str):
+                unique_word_set.add(hit_word)
+
+            if len(unique_word_set) / news_num < self.filter_threshold:
+                rst_clustering_list.append(clustering)
+
+        self.clustering_list = rst_clustering_list
 
 
 ##################################处理资讯嵌入的类#######################################
@@ -182,6 +236,7 @@ if __name__ == '__main__':
     # 遍历所有的资讯 做聚类
     clustering_mgr = ClusteringMgr()
     clustering_mgr.clustering_all_news(news_embedding_class.all_news_list)
+    clustering_mgr.filter_clustering()
 
 
     print("=================print_result=======================")
