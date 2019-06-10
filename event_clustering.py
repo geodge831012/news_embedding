@@ -151,9 +151,9 @@ class ClusteringMgr():
 
 
 
-# 测试load聚类文件并打印
-def load_cluster():
-    clustering_mgr = pickle.load(open("cluster.dat", "rb"))
+# 聚类信息打印
+def print_clustering(clustering_mgr):
+
     print("=================print_result=======================")
     print("clustering_mgr.clustering_list.len=%d" % len(clustering_mgr.clustering_list))
     print("=================print_result=======================")
@@ -173,7 +173,8 @@ def load_cluster():
 
 if __name__ == '__main__':
 
-#    load_cluster()
+#    clustering_mgr = pickle.load(open("cluster.dat", "rb"))
+#    print_clustering(clustering_mgr)
 #    exit(0)
 
     news_embedding = NewsEmbedding()
@@ -189,19 +190,9 @@ if __name__ == '__main__':
     clustering_mgr.filter_clustering()
 
 
-    print("=================print_result=======================")
-    print("clustering_mgr.clustering_list.len=%d" % len(clustering_mgr.clustering_list))
-    print("=================print_result=======================")
+    print_clustering(clustering_mgr)
 
-    for i in range(len(clustering_mgr.clustering_list)):
-        if len(clustering_mgr.clustering_list[i].news_info_list) > 3:
-            news_info_list = clustering_mgr.clustering_list[i].news_info_list
-
-            for j in range(len(news_info_list)):
-                print(news_info_list[j]["news_title"])
-
-            print("===================%d=====================" % i)
-
+    # 存储聚类信息
     pickle.dump(clustering_mgr, open("./cluster.dat", "wb"))
 
 
