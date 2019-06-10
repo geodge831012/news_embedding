@@ -86,10 +86,12 @@ class NewsEmbedding():
 
 if __name__ == '__main__':
 
-    news_embedding_class = NewsEmbedding()
+    news_embedding = NewsEmbedding()
 
     # 处理新闻数据
-    news_embedding_class.proc_news_data()
+    news_embedding.proc_news_data()
+
+    print(news_embedding.all_news_list[0])
 
 
 
