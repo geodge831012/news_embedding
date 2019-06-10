@@ -134,7 +134,7 @@ class ClusteringMgr():
             content_str = ""
             for j in range(len(clustering.news_info_list)):
                 news_info = clustering.news_info_list[j]
-                content_str += news_info["title"]
+                content_str += news_info["news_title"]
 
             # 匹配到的关键词 要进行唯一化处理
             # 比如10篇文章都有华谊兄弟亏损的 就不应该过滤
@@ -179,13 +179,13 @@ class NewsEmbedding():
         # 句子的向量 Vs
         news_embedding = np.zeros(self.model.vector_size, dtype=np.float)
 
-        key_list = news_info_dict["key_list"]
+        key_list = eval(news_info_dict["key_words"])
         for i in range(len(key_list)):
 
             # 单词名
             word        = key_list[i][0]
             # 此词的tfidf的值
-            word_tfidf  = float(key_list[i][1])
+            word_tfidf  = key_list[i][1]
 
             # word2vec某词
             w2v_vector = self.get_word2vec(word)
@@ -248,7 +248,7 @@ if __name__ == '__main__':
             news_info_list = clustering_mgr.clustering_list[i].news_info_list
 
             for j in range(len(news_info_list)):
-                print(news_info_list[j]["title"])
+                print(news_info_list[j]["news_title"])
 
             print("===================%d=====================" % i)
 
