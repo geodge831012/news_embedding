@@ -157,16 +157,16 @@ class ClusteringMgr():
 
 if __name__ == '__main__':
 
-    news_embedding_class = NewsEmbedding()
+    news_embedding = NewsEmbedding()
 
     # 处理新闻数据
-    news_embedding_class.proc_news_data()
+    news_embedding.proc_news_data()
 
 
-    print("news_embedding_class.all_news_list.len=%d" % len(news_embedding_class.all_news_list))
+    print("news_embedding_class.all_news_list.len=%d" % len(news_embedding.all_news_list))
     # 遍历所有的资讯 做聚类
     clustering_mgr = ClusteringMgr()
-    clustering_mgr.clustering_all_news(news_embedding_class.all_news_list)
+    clustering_mgr.clustering_all_news(news_embedding.all_news_list)
     clustering_mgr.filter_clustering()
 
 
