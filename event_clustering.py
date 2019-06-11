@@ -173,27 +173,29 @@ class ClusteringMgr():
 
 if __name__ == '__main__':
 
-#    clustering_mgr = pickle.load(open("cluster.dat", "rb"))
-#    clustering_mgr.print_clustering()
-#    exit(0)
-
     news_embedding = NewsEmbedding()
 
     # 处理新闻数据
     news_embedding.proc_news_data()
+    print("news_embedding.all_news_list.len=%d" % len(news_embedding.all_news_list))
+
+    cluster_dat = os.path.join(os.path.abspath(os.path.dirname(__file__)), "cluster.dat")
+    if os.path.exists(cluster_dat):
+        clustering_mgr = pickle.load(open(cluster_dat, "rb"))
+        clustering_mgr.print_clustering()
+    else:
+        clustering_mgr = ClusteringMgr()
 
 
-    print("news_embedding_class.all_news_list.len=%d" % len(news_embedding.all_news_list))
     # 遍历所有的资讯 做聚类
-    clustering_mgr = ClusteringMgr()
     clustering_mgr.clustering_all_news(news_embedding.all_news_list)
-    clustering_mgr.filter_clustering()
+    #clustering_mgr.filter_clustering()
 
 
     clustering_mgr.print_clustering()
 
     # 存储聚类信息
-    pickle.dump(clustering_mgr, open("./cluster.dat", "wb"))
+    pickle.dump(clustering_mgr, open(cluster_dat, "wb"))
 
 
 
